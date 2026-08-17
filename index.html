@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Viral Clipper</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>🎬 Viral Clipper</h1>
+      <p>Videonu yükle, AI en çok patlayacak anları bulup altyazılı klipler çıkarsın.</p>
+      <a class="yt-connect" href="/auth/youtube">YouTube hesabını bağla</a>
+    </header>
+
+    <section id="upload-box">
+      <input type="file" id="video-input" accept="video/*">
+      <button id="upload-btn">Yükle ve İşle</button>
+      <div id="upload-progress" class="hidden">
+        <div class="spinner"></div>
+        <span id="status-text">Yükleniyor...</span>
+      </div>
+    </section>
+
+    <section id="log-box" class="hidden">
+      <h3>İşlem günlüğü</h3>
+      <ul id="log-list"></ul>
+    </section>
+
+    <section id="clips-box" class="hidden">
+      <h2>Klipler</h2>
+      <div id="clips-grid"></div>
+    </section>
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
