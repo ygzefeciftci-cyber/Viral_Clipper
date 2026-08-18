@@ -288,25 +288,35 @@ def write_srt_for_range(segments, start, end, out_path):
         f.write("\n".join(lines))
 
 
+SHORTS_WIDTH = int(os.environ.get("SHORTS_WIDTH", "1080"))
+SHORTS_HEIGHT = int(os.environ.get("SHORTS_HEIGHT", "1920"))
+
+
 def cut_and_subtitle(src_path, start, end, srt_path, out_path):
+    """Cut the given range and export it as a proper 9:16 YouTube Short:
+    a blurred, filled copy of the frame as background, the original footage
+    centered on top (nothing cropped off), and subtitles burned in — all in
+    a single ffmpeg pass."""
     duration = end - start
-    # Cut the range, then burn subtitles in a second pass. Two passes keeps
-    # things simple/robust across ffmpeg builds.
-    tmp_cut = str(out_path) + ".cut.mp4"
-    subprocess.run([
-        "ffmpeg", "-y", "-ss", str(start), "-i", str(src_path),
-        "-t", str(duration), "-c:v", "libx264", "-c:a", "aac",
-        tmp_cut,
-    ], check=True)
+    w, h = SHORTS_WIDTH, SHORTS_HEIGHT
+
+    style = "FontSize=16,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=3"
+    filter_complex = (
+        f"[0:v]split=2[bg][fg];"
+        f"[bg]scale={w}:{h}:force_original_aspect_ratio=increase,"
+        f"crop={w}:{h},gblur=sigma=20[bg2];"
+        f"[fg]scale={w}:{h}:force_original_aspect_ratio=decrease[fg2];"
+        f"[bg2][fg2]overlay=(W-w)/2:(H-h)/2,"
+        f"subtitles={srt_path}:force_style='{style}'[v]"
+    )
 
     subprocess.run([
-        "ffmpeg", "-y", "-i", tmp_cut,
-        "-vf", f"subtitles={srt_path}:force_style='FontSize=16,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,BorderStyle=3'",
-        "-c:a", "copy",
+        "ffmpeg", "-y", "-ss", str(start), "-i", str(src_path), "-t", str(duration),
+        "-filter_complex", filter_complex,
+        "-map", "[v]", "-map", "0:a?",
+        "-c:v", "libx264", "-c:a", "aac",
         str(out_path),
     ], check=True)
-
-    os.remove(tmp_cut)
 
 
 # ---------------------------------------------------------------------------
