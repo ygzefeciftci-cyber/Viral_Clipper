@@ -40,6 +40,10 @@ for d in (UPLOAD_DIR, CLIP_DIR, JOBS_DIR, TOKENS_DIR):
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-me")
+app.config["PREFERRED_URL_SCHEME"] = "https"
+
+from werkzeug.middleware.proxy_fix import ProxyFix
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 NUM_CLIPS = int(os.environ.get("NUM_CLIPS_PER_VIDEO", "4"))
